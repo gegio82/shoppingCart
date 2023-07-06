@@ -126,10 +126,8 @@ class CartSpec extends Specification {
     }
 
     void "Calculate the tax rate of the shopping cart with multiple items"() {
-        given: "An empty shopping cart"
-            Cart cart = new Cart()
-        and: "A sales tax rate of 12.5%"
-            cart.setTaxRate(new BigDecimal(0.125))
+        given: "An empty shopping cart with sales tax rate of 12.5%"
+            Cart cart = new Cart(new BigDecimal(0.125))
         and: "And a product, Dove Soap with a unit price of 39.99"
             Product doveSoap = new Product(DOVE_SOAP_CODE, "Dove Soap", new BigDecimal("39.99"))
         and: "And another product, Axe Deo with a unit price of 99.99"
@@ -152,5 +150,17 @@ class CartSpec extends Specification {
             cart.taxes == new BigDecimal("35.00")
         and: "The shopping cart’s total price should equal 314.96"
             cart.totalPriceIncludingTaxes == new BigDecimal("314.96")
+    }
+
+    void "Discount by 10% cart value more than 400 Pounds" () {
+        given: "A cart with items for more than 400 GBP"
+            Cart cart = new Cart()
+        and: "A product"
+            Product doveSoap = new Product(DOVE_SOAP_CODE, "Dove Soap", new BigDecimal("30.00"))
+        when: "I add 20 items"
+            cart.addItem(doveSoap, 20)
+        then: "Price should be 10% discounted"
+            cart.totalPriceIncludingTaxes == new BigDecimal("540.00")
+
     }
 }

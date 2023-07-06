@@ -1,16 +1,21 @@
 package it.ggerosa.shoppingcart;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashSet;
 import java.util.Set;
 
 public class Cart {
-    private Set<Item> items = new HashSet<>();
-    private BigDecimal taxRate = BigDecimal.ZERO;
-    private BigDecimal trasholdForDiscount = new BigDecimal("200.00");
-    private BigDecimal discountRate = new BigDecimal("0.10");
+    private final Set<Item> items = new HashSet<>();
+    private final BigDecimal taxRate;
+    private final BigDecimal thresholdForDiscount = new BigDecimal("400.00");
+    private final BigDecimal discountRate = new BigDecimal("0.10");
 
-    public void setTaxRate(BigDecimal taxRate) {
+    public Cart() {
+        this(BigDecimal.ZERO);
+    }
+
+    public Cart(BigDecimal taxRate) {
         this.taxRate = taxRate;
     }
 
@@ -18,7 +23,10 @@ public class Cart {
         if (quantity == 0) {
             return;
         }
-        Item currentItem = items.stream().filter(it -> it.getProduct().equals(product)).findFirst().orElse(new Item(product, 0));
+        Item currentItem = items.stream()
+                .filter(it -> it.getProduct().equals(product))
+                .findFirst()
+                .orElse(new Item(product, 0));
         currentItem.updateQuantity(quantity);
         if (currentItem.getQuantity() > 0) {
             items.add(currentItem);
@@ -32,13 +40,18 @@ public class Cart {
     }
 
     public BigDecimal getTotalPrice() {
-        return items.stream()
-                .map(Item::getTotalPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add).setScale(2, BigDecimal.ROUND_HALF_UP);
+        BigDecimal totalPriceBeforeDiscount = items.stream().map(Item::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(2, RoundingMode.HALF_UP);
+        if (totalPriceBeforeDiscount.compareTo(thresholdForDiscount) > 0) {
+            return totalPriceBeforeDiscount.multiply(BigDecimal.ONE.subtract(discountRate));
+        } else {
+            return totalPriceBeforeDiscount;
+        }
     }
 
     private BigDecimal getTaxes() {
-        return getTotalPrice().multiply(taxRate).setScale(2, BigDecimal.ROUND_HALF_UP);
+        return getTotalPrice().multiply(taxRate).setScale(2, RoundingMode.HALF_UP);
     }
 
     public BigDecimal getTotalPriceIncludingTaxes() {
