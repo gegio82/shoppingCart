@@ -2,6 +2,7 @@ package it.ggerosa.shoppingcart;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -36,7 +37,7 @@ public class Cart {
     }
 
     public Set<Item> getItems() {
-        return items;
+        return Collections.unmodifiableSet(new HashSet<>(items));
     }
 
     public BigDecimal getTotalPrice() {
